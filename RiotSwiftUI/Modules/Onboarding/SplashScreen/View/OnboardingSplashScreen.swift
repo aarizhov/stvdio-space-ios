@@ -48,23 +48,24 @@ struct OnboardingSplashScreen: View {
                 HStack(alignment: .top, spacing: 0) {
                     
                     // Add a hidden page at the start of the carousel duplicating the content of the last page
-                    OnboardingSplashScreenPage(content: viewModel.viewState.content[pageCount - 1])
-                        .frame(width: geometry.size.width)
+//                    OnboardingSplashScreenPage(content: viewModel.viewState.content[pageCount - 1])
+//                        .frame(width: geometry.size.width)
                     
-                    ForEach(0..<pageCount, id: \.self) { index in
+                    let index = 0
+//                    ForEach(0..<pageCount, id: \.self) { index in
                         OnboardingSplashScreenPage(content: viewModel.viewState.content[index])
                             .frame(width: geometry.size.width)
-                    }
+//                    }
                     
                 }
-                .offset(x: pageOffset(in: geometry))
+//                .offset(x: pageOffset(in: geometry))
                 
                 Spacer()
-                
-                OnboardingSplashScreenPageIndicator(pageCount: pageCount,
-                                                    pageIndex: viewModel.pageIndex)
-                .frame(width: geometry.size.width)
-                .padding(.bottom)
+
+//                OnboardingSplashScreenPageIndicator(pageCount: pageCount,
+//                                                    pageIndex: viewModel.pageIndex)
+//                .frame(width: geometry.size.width)
+//                .padding(.bottom)
                 
                 Spacer()
                 
@@ -78,18 +79,18 @@ struct OnboardingSplashScreen: View {
             }
             .frame(maxHeight: .infinity)
             .background(background.ignoresSafeArea().offset(x: pageOffset(in: geometry)))
-            .gesture(
-                DragGesture()
-                    .onChanged(handleDragGestureChange)
-                    .onEnded { handleDragGestureEnded($0, viewSize: geometry.size) }
-            )
+//            .gesture(
+//                DragGesture()
+//                    .onChanged(handleDragGestureChange)
+//                    .onEnded { handleDragGestureEnded($0, viewSize: geometry.size) }
+//            )
         }
         .accentColor(theme.colors.accent)
         .navigationBarHidden(true)
-        .onAppear {
-            startTimer()
-        }
-        .onDisappear { stopTimer() }
+//        .onAppear {
+//            startTimer()
+//        }
+//        .onDisappear { stopTimer() }
         .track(screen: .welcome)
     }
     
@@ -123,7 +124,7 @@ struct OnboardingSplashScreen: View {
             theme.colors.background
         }
     }
-    
+    /*
     // MARK: - Animation
     
     /// Starts the animation timer for an automatic carousel effect.
@@ -205,6 +206,7 @@ struct OnboardingSplashScreen: View {
             dragOffset = 0
         }
     }
+     */
 }
 
 // MARK: - Previews

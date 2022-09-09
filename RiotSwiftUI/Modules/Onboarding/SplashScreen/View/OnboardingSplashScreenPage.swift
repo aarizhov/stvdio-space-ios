@@ -31,29 +31,37 @@ struct OnboardingSplashScreenPage: View {
     
     var body: some View {
         VStack {
-            Image(theme.isDark ? content.darkImage.name : content.image.name)
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: 310) // This value is problematic. 300 results in dropped frames
-                                      // on iPhone 12/13 Mini. 305 the same on iPhone 12/13. As of
-                                      // iOS 15, 310 seems fine on all supported screen widths 🤞.
-                .padding(20)
-                .accessibilityHidden(true)
-            
-            VStack(spacing: 8) {
-                OnboardingTintedFullStopText(content.title)
-                    .font(theme.fonts.title2B)
-                    .foregroundColor(theme.colors.primaryContent)
-                Text(content.message)
-                    .font(theme.fonts.body)
-                    .foregroundColor(theme.colors.secondaryContent)
-                    .multilineTextAlignment(.center)
+            ZStack {
+                Image("onboarding_bg")
+                    .resizable()
+                    .scaledToFill()
+                    .edgesIgnoringSafeArea(.all)
+//            Image(theme.isDark ? content.darkImage.name : content.image.name)
+//                .resizable()
+//                .scaledToFit()
+//                .frame(maxWidth: 310) // This value is problematic. 300 results in dropped frames
+//                                      // on iPhone 12/13 Mini. 305 the same on iPhone 12/13. As of
+//                                      // iOS 15, 310 seems fine on all supported screen widths 🤞.
+//                .padding(20)
+//                .accessibilityHidden(true)
+
+                Spacer()
+                
+                VStack(spacing: 8) {
+                    OnboardingTintedFullStopText(content.title)
+                        .font(theme.fonts.title2B)
+                        .foregroundColor(theme.colors.primaryContent)
+                    Text(content.message)
+                        .font(theme.fonts.body)
+                        .foregroundColor(theme.colors.secondaryContent)
+                        .multilineTextAlignment(.center)
+                }
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .fixedSize(horizontal: false, vertical: true)
+            .padding(.bottom)
+            .padding(.horizontal, 16)
+            .readableFrame()
         }
-        .padding(.bottom)
-        .padding(.horizontal, 16)
-        .readableFrame()
     }
 }
 
