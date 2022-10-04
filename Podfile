@@ -52,7 +52,7 @@ end
 ########################################
 
 def import_MatrixKit_pods
-  pod 'libPhoneNumber-iOS', '~> 0.9.13'  
+  pod 'libPhoneNumber-iOS', '~> 0.9.13'
   pod 'DTCoreText', '~> 1.6.25'
   #pod 'DTCoreText/Extension', '~> 1.6.25'
   pod 'Down', '~> 0.11.0'
@@ -72,7 +72,7 @@ abstract_target 'RiotPods' do
 
   # PostHog for analytics
   pod 'PostHog', '~> 1.4.4'
-  pod 'Sentry', '~> 7.15.0'
+  # pod 'Sentry', '~> 7.15.0'
   pod 'AnalyticsEvents', :git => 'https://github.com/matrix-org/matrix-analytics-events.git', :branch => 'release/swift', :inhibit_warnings => false
   # pod 'AnalyticsEvents', :path => '../matrix-analytics-events/AnalyticsEvents.podspec'
 
@@ -100,7 +100,7 @@ abstract_target 'RiotPods' do
     pod 'SideMenu', '~> 6.5'
     pod 'DSWaveformImage', '~> 6.1.1'
     pod 'ffmpeg-kit-ios-audio', '4.5.1'
-    
+
     pod 'FLEX', '~> 4.5.0', :configurations => ['Debug'], :inhibit_warnings => true
 
     target 'RiotTests' do
@@ -115,11 +115,11 @@ abstract_target 'RiotPods' do
 
   target "RiotSwiftUI" do
     import_SwiftUI_pods
-  end 
+  end
 
   target "RiotSwiftUITests" do
     import_SwiftUI_pods
-  end 
+  end
 
   target "SiriIntents" do
     import_MatrixSDK
@@ -153,6 +153,8 @@ post_install do |installer|
       # Disable nullability checks
       config.build_settings['WARNING_CFLAGS'] ||= ['$(inherited)','-Wno-nullability-completeness']
       config.build_settings['OTHER_SWIFT_FLAGS'] ||= ['$(inherited)', '-Xcc', '-Wno-nullability-completeness']
+
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
     end
   end
 end

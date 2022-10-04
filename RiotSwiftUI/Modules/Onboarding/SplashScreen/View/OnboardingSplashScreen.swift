@@ -78,7 +78,7 @@ struct OnboardingSplashScreen: View {
                     .frame(height: OnboardingMetrics.spacerHeight(in: geometry))
             }
             .frame(maxHeight: .infinity)
-            .background(background.ignoresSafeArea().offset(x: pageOffset(in: geometry)))
+            .background(background.ignoresSafeArea()/*.offset(x: pageOffset(in: geometry))*/)
 //            .gesture(
 //                DragGesture()
 //                    .onChanged(handleDragGestureChange)

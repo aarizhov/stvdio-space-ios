@@ -30,7 +30,7 @@ jobs:
     if: needs.check-secret.outputs.out-key == 'true'
     name: Release
     runs-on: macos-12
-    
+
     concurrency:
       # Only allow a single run of this workflow on each branch, automatically cancelling older runs.
       group: alpha-${{ github.head_ref }}
@@ -91,16 +91,16 @@ jobs:
           FASTLANE_USER: ${{ secrets.FASTLANE_USER }}
           FASTLANE_PASSWORD: ${{ secrets.FASTLANE_PASSWORD }}
           DIAWI_API_TOKEN: ${{ secrets.DIAWI_API_TOKEN }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          # SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Add or update PR comment with Ad-hoc release informations
         uses: NejcZdovc/comment-pr@v1
         with:
           message: |
-            :iphone: Scan the QR code below to install the build for this PR. 
-            :lock: This build is for internal testing purpose. Only devices listed in the ad-hoc provisioning profile can install Element Alpha.  
+            :iphone: Scan the QR code below to install the build for this PR.
+            :lock: This build is for internal testing purpose. Only devices listed in the ad-hoc provisioning profile can install Element Alpha.
 
-            ![QR code](${{ env.DIAWI_QR_CODE_LINK }})  
+            ![QR code](${{ env.DIAWI_QR_CODE_LINK }})
 
             If you can't scan the QR code you can install the build via this link: ${{ env.DIAWI_FILE_LINK }}
           # Enables to identify and update existing Ad-hoc release message on new commit in the PR

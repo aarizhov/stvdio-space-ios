@@ -87,9 +87,6 @@ PODS:
     - Reusable/View (= 4.1.2)
   - Reusable/Storyboard (4.1.2)
   - Reusable/View (4.1.2)
-  - Sentry (7.15.0):
-    - Sentry/Core (= 7.15.0)
-  - Sentry/Core (7.15.0)
   - SideMenu (6.5.0)
   - SwiftBase32 (0.9.0)
   - SwiftGen (6.6.2)
@@ -129,7 +126,6 @@ DEPENDENCIES:
   - PostHog (~> 1.4.4)
   - ReadMoreTextView (~> 3.0.1)
   - Reusable (~> 4.1)
-  - Sentry (~> 7.15.0)
   - SideMenu (~> 6.5)
   - SwiftBase32 (~> 0.9.0)
   - SwiftGen (~> 6.3)
@@ -173,7 +169,6 @@ SPEC REPOS:
     - ReadMoreTextView
     - Realm
     - Reusable
-    - Sentry
     - SideMenu
     - SwiftBase32
     - SwiftGen
@@ -228,7 +223,6 @@ SPEC CHECKSUMS:
   ReadMoreTextView: 19147adf93abce6d7271e14031a00303fe28720d
   Realm: 9ca328bd7e700cc19703799785e37f77d1a130f2
   Reusable: 6bae6a5e8aa793c9c441db0213c863a64bce9136
-  Sentry: 63ca44f5e0c8cea0ee5a07686b02e56104f41ef7
   SideMenu: f583187d21c5b1dd04c72002be544b555a2627a2
   SwiftBase32: 9399c25a80666dc66b51e10076bf591e3bbb8f17
   SwiftGen: 1366a7f71aeef49954ca5a63ba4bef6b0f24138c
@@ -241,6 +235,6 @@ SPEC CHECKSUMS:
   zxcvbn-ios: fef98b7c80f1512ff0eec47ac1fa399fc00f7e3c
   ZXingObjC: fdbb269f25dd2032da343e06f10224d62f537bdb
 
-PODFILE CHECKSUM: 400334cf1580361b831a632dcc025f2029e56b6e
+PODFILE CHECKSUM: 75bba2e1246a4917abb7ea252ba4632f94c3039f
 
 COCOAPODS: 1.11.3
