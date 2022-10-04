@@ -179,6 +179,66 @@ public class VectorL10n: NSObject {
   public static var allChatsEditMenuSpaceSettings: String { 
     return VectorL10n.tr("Vector", "all_chats_edit_menu_space_settings") 
   }
+  /// You’re all caught up.
+  public static var allChatsEmptyListPlaceholderTitle: String { 
+    return VectorL10n.tr("Vector", "all_chats_empty_list_placeholder_title") 
+  }
+  /// Spaces are a new way to group rooms and people. Add an existing room, or create a new one, using the bottom-right button.
+  public static var allChatsEmptySpaceInformation: String { 
+    return VectorL10n.tr("Vector", "all_chats_empty_space_information") 
+  }
+  /// This is where your unread messages will show up, when you have some.
+  public static var allChatsEmptyUnreadsPlaceholderMessage: String { 
+    return VectorL10n.tr("Vector", "all_chats_empty_unreads_placeholder_message") 
+  }
+  /// The all-in-one secure chat app for teams, friends and organisations. Create a chat, or join an existing room, to get started.
+  public static var allChatsEmptyViewInformation: String { 
+    return VectorL10n.tr("Vector", "all_chats_empty_view_information") 
+  }
+  /// %@\nis looking a little empty.
+  public static func allChatsEmptyViewTitle(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "all_chats_empty_view_title", p1)
+  }
+  /// Try adjusting your search.
+  public static var allChatsNothingFoundPlaceholderMessage: String { 
+    return VectorL10n.tr("Vector", "all_chats_nothing_found_placeholder_message") 
+  }
+  /// Nothing found.
+  public static var allChatsNothingFoundPlaceholderTitle: String { 
+    return VectorL10n.tr("Vector", "all_chats_nothing_found_placeholder_title") 
+  }
+  /// To simplify your Element, tabs are now optional. Manage them using the top-right menu.
+  public static var allChatsOnboardingPageMessage1: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_page_message1") 
+  }
+  /// Access your Spaces (bottom-left) faster and easier than ever before.
+  public static var allChatsOnboardingPageMessage2: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_page_message2") 
+  }
+  /// Tap your profile to let us know what you think.
+  public static var allChatsOnboardingPageMessage3: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_page_message3") 
+  }
+  /// Welcome to a new view!
+  public static var allChatsOnboardingPageTitle1: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_page_title1") 
+  }
+  /// Access Spaces
+  public static var allChatsOnboardingPageTitle2: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_page_title2") 
+  }
+  /// Give Feedback
+  public static var allChatsOnboardingPageTitle3: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_page_title3") 
+  }
+  /// What's new
+  public static var allChatsOnboardingTitle: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_title") 
+  }
+  /// Try it out
+  public static var allChatsOnboardingTryIt: String { 
+    return VectorL10n.tr("Vector", "all_chats_onboarding_try_it") 
+  }
   /// Chats
   public static var allChatsSectionTitle: String { 
     return VectorL10n.tr("Vector", "all_chats_section_title") 
@@ -1391,6 +1451,22 @@ public class VectorL10n: NSObject {
   public static var deviceDetailsTitle: String { 
     return VectorL10n.tr("Vector", "device_details_title") 
   }
+  /// %@ Desktop
+  public static func deviceNameDesktop(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "device_name_desktop", p1)
+  }
+  /// %@ Mobile
+  public static func deviceNameMobile(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "device_name_mobile", p1)
+  }
+  /// Unknown client
+  public static var deviceNameUnknown: String { 
+    return VectorL10n.tr("Vector", "device_name_unknown") 
+  }
+  /// %@ Web
+  public static func deviceNameWeb(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "device_name_web", p1)
+  }
   /// The other party cancelled the verification.
   public static var deviceVerificationCancelled: String { 
     return VectorL10n.tr("Vector", "device_verification_cancelled") 
@@ -2490,6 +2566,10 @@ public class VectorL10n: NSObject {
   /// Hey, talk to me on %@: %@
   public static func inviteFriendsShareText(_ p1: String, _ p2: String) -> String {
     return VectorL10n.tr("Vector", "invite_friends_share_text", p1, p2)
+  }
+  /// Invite to %@
+  public static func inviteTo(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "invite_to", p1)
   }
   /// Invite matrix User
   public static var inviteUser: String { 
@@ -5543,6 +5623,10 @@ public class VectorL10n: NSObject {
   public static var roomEventEncryptionInfoEventUserId: String { 
     return VectorL10n.tr("Vector", "room_event_encryption_info_event_user_id") 
   }
+  /// The authenticity of this encrypted message can't be guaranteed on this device.
+  public static var roomEventEncryptionInfoKeyAuthenticityNotGuaranteed: String { 
+    return VectorL10n.tr("Vector", "room_event_encryption_info_key_authenticity_not_guaranteed") 
+  }
   /// End-to-end encryption information\n\n
   public static var roomEventEncryptionInfoTitle: String { 
     return VectorL10n.tr("Vector", "room_event_encryption_info_title") 
@@ -5574,6 +5658,10 @@ public class VectorL10n: NSObject {
   /// Failed to send
   public static var roomEventFailedToSend: String { 
     return VectorL10n.tr("Vector", "room_event_failed_to_send") 
+  }
+  /// Send your first message…
+  public static var roomFirstMessagePlaceholder: String { 
+    return VectorL10n.tr("Vector", "room_first_message_placeholder") 
   }
   /// Room Info
   public static var roomInfoBackButtonTitle: String { 
@@ -5650,6 +5738,14 @@ public class VectorL10n: NSObject {
   /// To %@
   public static func roomInviteToSpaceOptionTitle(_ p1: String) -> String {
     return VectorL10n.tr("Vector", "room_invite_to_space_option_title", p1)
+  }
+  /// This is where your invites appear.
+  public static var roomInvitesEmptyViewInformation: String { 
+    return VectorL10n.tr("Vector", "room_invites_empty_view_information") 
+  }
+  /// Nothing new.
+  public static var roomInvitesEmptyViewTitle: String { 
+    return VectorL10n.tr("Vector", "room_invites_empty_view_title") 
   }
   /// Join
   public static var roomJoinGroupCall: String { 
@@ -7279,6 +7375,10 @@ public class VectorL10n: NSObject {
   public static var settingsLabsEnableLiveLocationSharing: String { 
     return VectorL10n.tr("Vector", "settings_labs_enable_live_location_sharing") 
   }
+  /// New Application Layout
+  public static var settingsLabsEnableNewAppLayout: String { 
+    return VectorL10n.tr("Vector", "settings_labs_enable_new_app_layout") 
+  }
   /// Ring for group calls
   public static var settingsLabsEnableRingingForGroupCalls: String { 
     return VectorL10n.tr("Vector", "settings_labs_enable_ringing_for_group_calls") 
@@ -7747,6 +7847,10 @@ public class VectorL10n: NSObject {
   public static var spaceBetaAnnounceTitle: String { 
     return VectorL10n.tr("Vector", "space_beta_announce_title") 
   }
+  /// Space detail
+  public static var spaceDetailNavTitle: String { 
+    return VectorL10n.tr("Vector", "space_detail_nav_title") 
+  }
   /// Spaces are a new way to group rooms and people.\n\nThey’ll be here soon. For now, if you join one on another platform, you will be able to access any rooms you join here.
   public static var spaceFeatureUnavailableInformation: String { 
     return VectorL10n.tr("Vector", "space_feature_unavailable_information") 
@@ -7762,6 +7866,10 @@ public class VectorL10n: NSObject {
   /// Show all rooms
   public static var spaceHomeShowAllRooms: String { 
     return VectorL10n.tr("Vector", "space_home_show_all_rooms") 
+  }
+  /// Space invite
+  public static var spaceInviteNavTitle: String { 
+    return VectorL10n.tr("Vector", "space_invite_nav_title") 
   }
   /// You do not have permission to invite people to this space
   public static var spaceInviteNotEnoughPermission: String { 
@@ -7790,6 +7898,18 @@ public class VectorL10n: NSObject {
   /// Open to anyone, best for communities
   public static var spacePublicJoinRuleDetail: String { 
     return VectorL10n.tr("Vector", "space_public_join_rule_detail") 
+  }
+  /// Create Space
+  public static var spaceSelectorCreateSpace: String { 
+    return VectorL10n.tr("Vector", "space_selector_create_space") 
+  }
+  /// Spaces are a way to group rooms and people. Create a space to get started.
+  public static var spaceSelectorEmptyViewInformation: String { 
+    return VectorL10n.tr("Vector", "space_selector_empty_view_information") 
+  }
+  /// No spaces yet.
+  public static var spaceSelectorEmptyViewTitle: String { 
+    return VectorL10n.tr("Vector", "space_selector_empty_view_title") 
   }
   /// My spaces
   public static var spaceSelectorTitle: String { 
@@ -8046,6 +8166,10 @@ public class VectorL10n: NSObject {
   /// Explore rooms
   public static var spacesExploreRooms: String { 
     return VectorL10n.tr("Vector", "spaces_explore_rooms") 
+  }
+  /// Explore %@
+  public static func spacesExploreRoomsFormat(_ p1: String) -> String {
+    return VectorL10n.tr("Vector", "spaces_explore_rooms_format", p1)
   }
   /// 1 room
   public static var spacesExploreRoomsOneRoom: String { 
@@ -8346,6 +8470,70 @@ public class VectorL10n: NSObject {
   /// User ID:
   public static var userIdTitle: String { 
     return VectorL10n.tr("Vector", "user_id_title") 
+  }
+  /// %@ · Last activity %@
+  public static func userSessionItemDetails(_ p1: String, _ p2: String) -> String {
+    return VectorL10n.tr("Vector", "user_session_item_details", p1, p2)
+  }
+  /// Learn more
+  public static var userSessionLearnMore: String { 
+    return VectorL10n.tr("Vector", "user_session_learn_more") 
+  }
+  /// %@: %@
+  public static func userSessionName(_ p1: String, _ p2: String) -> String {
+    return VectorL10n.tr("Vector", "user_session_name", p1, p2)
+  }
+  /// Unverified session
+  public static var userSessionUnverified: String { 
+    return VectorL10n.tr("Vector", "user_session_unverified") 
+  }
+  /// Verify your current session for enhanced secure messaging.
+  public static var userSessionUnverifiedAdditionalInfo: String { 
+    return VectorL10n.tr("Vector", "user_session_unverified_additional_info") 
+  }
+  /// Unverified
+  public static var userSessionUnverifiedShort: String { 
+    return VectorL10n.tr("Vector", "user_session_unverified_short") 
+  }
+  /// Verified session
+  public static var userSessionVerified: String { 
+    return VectorL10n.tr("Vector", "user_session_verified") 
+  }
+  /// Your current session is ready for secure messaging.
+  public static var userSessionVerifiedAdditionalInfo: String { 
+    return VectorL10n.tr("Vector", "user_session_verified_additional_info") 
+  }
+  /// Verified
+  public static var userSessionVerifiedShort: String { 
+    return VectorL10n.tr("Vector", "user_session_verified_short") 
+  }
+  /// Verify session
+  public static var userSessionVerifyAction: String { 
+    return VectorL10n.tr("Vector", "user_session_verify_action") 
+  }
+  /// View details
+  public static var userSessionViewDetails: String { 
+    return VectorL10n.tr("Vector", "user_session_view_details") 
+  }
+  /// CURRENT SESSION
+  public static var userSessionsOverviewCurrentSessionSectionTitle: String { 
+    return VectorL10n.tr("Vector", "user_sessions_overview_current_session_section_title") 
+  }
+  /// For best security, verify your sessions and sign out from any session that you don’t recognize or use anymore.
+  public static var userSessionsOverviewOtherSessionsSectionInfo: String { 
+    return VectorL10n.tr("Vector", "user_sessions_overview_other_sessions_section_info") 
+  }
+  /// OTHER SESSIONS
+  public static var userSessionsOverviewOtherSessionsSectionTitle: String { 
+    return VectorL10n.tr("Vector", "user_sessions_overview_other_sessions_section_title") 
+  }
+  /// Sessions
+  public static var userSessionsOverviewTitle: String { 
+    return VectorL10n.tr("Vector", "user_sessions_overview_title") 
+  }
+  /// Manage sessions
+  public static var userSessionsSettings: String { 
+    return VectorL10n.tr("Vector", "user_sessions_settings") 
   }
   /// If you didn’t sign in to this session, your account may be compromised.
   public static var userVerificationSessionDetailsAdditionalInformationUntrustedCurrentUser: String { 

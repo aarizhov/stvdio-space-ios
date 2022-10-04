@@ -14,6 +14,7 @@
  limitations under the License.
  */
 
+import Foundation
 import UIKit
 import DesignKit
 
@@ -25,7 +26,9 @@ class DefaultTheme: NSObject, Theme {
     
     var backgroundColor: UIColor = UIColor(rgb: 0xFFFFFF)
 
-    var baseColor: UIColor = BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0xFFFFFF) : UIColor(rgb: 0xF5F7FA)
+    var baseColor: UIColor {
+        BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0xFFFFFF) : UIColor(rgb: 0xF5F7FA)
+    }
     var baseIconPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var baseTextPrimaryColor: UIColor = UIColor(rgb: 0xFFFFFF)
     var baseTextSecondaryColor: UIColor = UIColor(rgb: 0x8F97A3)
@@ -34,7 +37,9 @@ class DefaultTheme: NSObject, Theme {
     var searchPlaceholderColor: UIColor = UIColor(rgb: 0x8F97A3)
     var searchResultHighlightColor: UIColor = UIColor(rgb: 0xFCC639).withAlphaComponent(0.2)
 
-    var headerBackgroundColor: UIColor = BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0xFFFFFF) : UIColor(rgb: 0xF5F7FA)
+    var headerBackgroundColor: UIColor {
+        BuildSettings.newAppLayoutEnabled ? UIColor(rgb: 0xFFFFFF) : UIColor(rgb: 0xF5F7FA)
+    }
     var headerBorderColor: UIColor  = UIColor(rgb: 0xE9EDF1)
     var headerTextPrimaryColor: UIColor = UIColor(rgb: 0x17191C)
     var headerTextSecondaryColor: UIColor = UIColor(rgb: 0x737D8C)
@@ -193,8 +198,8 @@ class DefaultTheme: NSObject, Theme {
         button.setTitleColor(self.tintColor, for: .normal)
     }
     
-    // MARK: - Theme v2
-    var colors = UIColor.elementLight
+    ///  MARK: - Theme v2
+    var colors: ColorsUIKit = LightColors.uiKit
     
-    var fonts = UIFont.element
+    var fonts: FontsUIKit = FontsUIKit(values: ElementFonts())
 }

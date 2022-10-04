@@ -23,7 +23,7 @@ import CommonKit
 import MatrixSDK
 
 @objcMembers
-final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
+final class TabBarCoordinator: NSObject, SplitViewMasterCoordinatorProtocol {
     
     // MARK: - Properties
     
@@ -77,7 +77,7 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     // Must be used only internally
     var childCoordinators: [Coordinator] = []
     
-    weak var delegate: TabBarCoordinatorDelegate?
+    weak var delegate: SplitViewMasterCoordinatorDelegate?
     
     weak var splitViewMasterPresentableDelegate: SplitViewMasterPresentableDelegate?
     
@@ -123,6 +123,8 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
             self.registerUserSessionsServiceNotifications()
             self.registerSessionChange()
             
+            NotificationCenter.default.addObserver(self, selector: #selector(self.newAppLayoutToggleDidChange(notification:)), name: RiotSettings.newAppLayoutBetaToggleDidChange, object: nil)
+
             self.updateMasterTabBarController(with: spaceId, forceReload: true)
         } else {
             self.updateMasterTabBarController(with: spaceId)
@@ -239,6 +241,15 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     
     // MARK: - Private methods
     
+    @objc private func newAppLayoutToggleDidChange(notification: Notification) {
+        self.masterTabBarController = nil
+        start()
+//        updateMasterTabBarController(with: self.currentSpaceId, forceReload: true)
+//        createLeftButtonItem(for: self.masterTabBarController)
+//        createRightButtonItem(for: self.masterTabBarController)
+//        popToHome(animated: true, completion: nil)
+    }
+    
     private func createMasterTabBarController() -> MasterTabBarController {
         let tabBarController = MasterTabBarController()
         
@@ -286,17 +297,6 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
         return versionCheckCoordinator
     }
     
-    private func createAllChatsViewController() -> AllChatsViewControllerWithBannerWrapperViewController {
-        let allChatsViewController = AllChatsViewController.instantiate()
-        allChatsViewController.tabBarItem.tag = Int(TABBAR_HOME_INDEX)
-        allChatsViewController.tabBarItem.image = allChatsViewController.tabBarItem.image
-        allChatsViewController.accessibilityLabel = VectorL10n.allChatsTitle
-        allChatsViewController.userIndicatorStore = UserIndicatorStore(presenter: indicatorPresenter)
-        
-        let wrapperViewController = AllChatsViewControllerWithBannerWrapperViewController(viewController: allChatsViewController)
-        return wrapperViewController
-    }
-    
     private func createHomeViewController() -> HomeViewControllerWithBannerWrapperViewController {
         let homeViewController: HomeViewController = HomeViewController.instantiate()
         homeViewController.tabBarItem.tag = Int(TABBAR_HOME_INDEX)
@@ -330,13 +330,6 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
         roomsViewController.accessibilityLabel = VectorL10n.titleRooms
         roomsViewController.userIndicatorStore = UserIndicatorStore(presenter: indicatorPresenter)
         return roomsViewController
-    }
-    
-    private func createGroupsViewController() -> GroupsViewController {
-        let groupsViewController: GroupsViewController = GroupsViewController.instantiate()
-        groupsViewController.tabBarItem.tag = Int(TABBAR_GROUPS_INDEX)
-        groupsViewController.accessibilityLabel = VectorL10n.titleGroups
-        return groupsViewController
     }
     
     private func createUnifiedSearchController() -> UnifiedSearchViewController {
@@ -374,7 +367,7 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     private func updateTabControllers(for tabBarController: MasterTabBarController, showCommunities: Bool) {
         var viewControllers: [UIViewController] = []
 
-        let homeViewController = BuildSettings.newAppLayoutEnabled ? self.createAllChatsViewController() : self.createHomeViewController()
+        let homeViewController = self.createHomeViewController()
         viewControllers.append(homeViewController)
         
         if !BuildSettings.newAppLayoutEnabled {
@@ -391,11 +384,6 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
             if RiotSettings.shared.homeScreenShowRoomsTab {
                 let roomsViewController = self.createRoomsViewController()
                 viewControllers.append(roomsViewController)
-            }
-            
-            if RiotSettings.shared.homeScreenShowCommunitiesTab && !(self.currentMatrixSession?.groups().isEmpty ?? false) && showCommunities {
-                let groupsViewController = self.createGroupsViewController()
-                viewControllers.append(groupsViewController)
             }
         }
         
@@ -449,18 +437,6 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
         }
     }
     
-    // FIXME: Should be displayed from a tab.
-    private func showGroupDetails(with group: MXGroup, for matrixSession: MXSession, presentationParameters: ScreenPresentationParameters) {
-        let coordinatorParameters = GroupDetailsCoordinatorParameters(session: matrixSession, group: group)
-        let coordinator = GroupDetailsCoordinator(parameters: coordinatorParameters)
-        coordinator.start()
-        self.add(childCoordinator: coordinator)
-        
-        self.showSplitViewDetails(with: coordinator, stackedOnSplitViewDetail: presentationParameters.stackAboveVisibleViews) { [weak self] in
-            self?.remove(childCoordinator: coordinator)
-        }
-    }
-    
     private func showRoom(withId roomId: String, eventId: String? = nil) {
         
         guard let matrixSession = self.parameters.userSessionsService.mainUserSession?.matrixSession else {
@@ -492,6 +468,7 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
                                                                       roomId: roomNavigationParameters.roomId,
                                                                       eventId: roomNavigationParameters.eventId,
                                                                       threadId: threadId,
+                                                                      userId: roomNavigationParameters.userId,
                                                                       showSettingsInitially: roomNavigationParameters.showSettingsInitially,
                                                                       displayConfiguration: displayConfig,
                                                                       autoJoinInvitedRoom: roomNavigationParameters.autoJoinInvitedRoom)
@@ -690,10 +667,6 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
         }
         
         self.addMatrixSessionToMasterTabBarController(userSession.matrixSession)
-        
-        if let matrixSession = self.currentMatrixSession, matrixSession.groups().isEmpty {
-            self.masterTabBarController.removeTab(at: .groups)
-        }
     }
     
     @objc private func userSessionsServiceWillRemoveUserSession(_ notification: Notification) {
@@ -721,10 +694,6 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     }
     
     @objc private func sessionDidSync(_ notification: Notification) {
-        if self.currentMatrixSession?.groups().isEmpty ?? true {
-            self.masterTabBarController.removeTab(at: .groups)
-        }
-        
         if let session = notification.object as? MXSession {
             showCoachMessageIfNeeded(with: session)
         }
@@ -735,6 +704,7 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     // MARK: Navigation bar items management
     
     private weak var rightMenuAvatarView: AvatarView?
+    private weak var rightMenuButton: UIButton?
     
     private func createLeftButtonItem(for viewController: UIViewController) {
         guard !BuildSettings.newAppLayoutEnabled else {
@@ -775,13 +745,13 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
     private func createAvatarButtonItem(for viewController: UIViewController) {
         var actions: [UIMenuElement] = []
         
-        actions.append(UIAction(title: VectorL10n.allChatsUserMenuSettings, image: UIImage(systemName: "gearshape")) { [weak self] action in
+        actions.append(UIAction(title: VectorL10n.settings, image: UIImage(systemName: "gearshape")) { [weak self] action in
             self?.showSettings()
         })
         
         var subMenuActions: [UIAction] = []
         if BuildSettings.sideMenuShowInviteFriends {
-            subMenuActions.append(UIAction(title: VectorL10n.sideMenuActionInviteFriends, image: UIImage(systemName: "square.and.arrow.up.fill")) { [weak self] action in
+            subMenuActions.append(UIAction(title: VectorL10n.inviteTo(AppInfo.current.displayName), image: UIImage(systemName: "envelope")) { [weak self] action in
                         self?.showInviteFriends(from: nil)
             })
         }
@@ -808,6 +778,7 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
         button.showsMenuAsPrimaryAction = true
         button.autoresizingMask = [.flexibleHeight, .flexibleWidth]
         view.addSubview(button)
+        self.rightMenuButton = button
         
         let avatarView = UserAvatarView(frame: view.bounds.inset(by: UIEdgeInsets(top: 7, left: 7, bottom: 7, right: 7)))
         avatarView.isUserInteractionEnabled = false
@@ -818,16 +789,18 @@ final class TabBarCoordinator: NSObject, TabBarCoordinatorType {
 
         if let avatar = userAvatarViewData(from: currentMatrixSession) {
             avatarView.fill(with: avatar)
+            button.setImage(nil, for: .normal)
         }
         
         viewController.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: view)
     }
     
     private func updateAvatarButtonItem() {
-        guard let avatarView = rightMenuAvatarView, let avatar = userAvatarViewData(from: currentMatrixSession) else {
+        guard let avatarView = rightMenuAvatarView, let button = rightMenuButton, let avatar = userAvatarViewData(from: currentMatrixSession) else {
             return
         }
         
+        button.setImage(nil, for: .normal)
         avatarView.fill(with: avatar)
     }
     
@@ -961,15 +934,11 @@ extension TabBarCoordinator: MasterTabBarControllerDelegate {
     }
         
     func masterTabBarControllerDidCompleteAuthentication(_ masterTabBarController: MasterTabBarController!) {
-        self.delegate?.tabBarCoordinatorDidCompleteAuthentication(self)
+        self.delegate?.splitViewMasterCoordinatorDidCompleteAuthentication(self)
     }
     
     func masterTabBarController(_ masterTabBarController: MasterTabBarController!, didSelectRoomWithId roomId: String!, andEventId eventId: String!, inMatrixSession matrixSession: MXSession!, completion: (() -> Void)!) {
         self.showRoom(with: roomId, eventId: eventId, matrixSession: matrixSession, completion: completion)
-    }
-    
-    func masterTabBarController(_ masterTabBarController: MasterTabBarController!, didSelect group: MXGroup!, inMatrixSession matrixSession: MXSession!, presentationParameters: ScreenPresentationParameters!) {
-        self.showGroupDetails(with: group, for: matrixSession, presentationParameters: presentationParameters)
     }
     
     func masterTabBarController(_ masterTabBarController: MasterTabBarController!, needsSideMenuIconWithNotification displayNotification: Bool) {
@@ -1025,6 +994,10 @@ extension TabBarCoordinator: RoomCoordinatorDelegate {
         
         self.showRoom(with: roomCoordinatorParameters,
                       stackOnSplitViewDetail: false)
+    }
+    
+    func roomCoordinatorDidCancelNewDirectChat(_ coordinator: RoomCoordinatorProtocol) {
+        self.navigationRouter.popModule(animated: true)
     }
 }
 

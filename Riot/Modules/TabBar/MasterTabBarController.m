@@ -18,7 +18,6 @@
 #import "MasterTabBarController.h"
 
 #import "RecentsDataSource.h"
-#import "GroupsDataSource.h"
 
 
 #import "MXRoom+Riot.h"
@@ -46,9 +45,6 @@
     // Observe kThemeServiceDidChangeThemeNotification to handle user interface theme change.
     id kThemeServiceDidChangeThemeNotificationObserver;
     
-    // The groups data source
-    GroupsDataSource *groupsDataSource;
-    
     // Custom title view of the navigation bar
     MainTitleView *titleView;
     
@@ -58,6 +54,7 @@
 @property(nonatomic,getter=isHidden) BOOL hidden;
 
 @property (nonatomic, readwrite) OnboardingCoordinatorBridgePresenter *onboardingCoordinatorBridgePresenter;
+@property (nonatomic) AllChatsOnboardingCoordinatorBridgePresenter *allChatsOnboardingCoordinatorBridgePresenter;
 
 // Tell whether the onboarding screen is preparing.
 @property (nonatomic, readwrite) BOOL isOnboardingCoordinatorPreparing;
@@ -68,6 +65,7 @@
 @end
 
 @implementation MasterTabBarController
+@synthesize onboardingCoordinatorBridgePresenter, selectedRoomId, selectedEventId, selectedRoomSession, selectedRoomPreviewData, selectedContact, isOnboardingInProgress;
 
 #pragma mark - Properties override
 
@@ -90,11 +88,6 @@
 - (RoomsViewController *)roomsViewController
 {
     return (RoomsViewController*)[self viewControllerForClass:RoomsViewController.class];
-}
-
-- (GroupsViewController *)groupsViewController
-{
-    return (GroupsViewController*)[self viewControllerForClass:GroupsViewController.class];
 }
 
 #pragma mark - Life cycle
@@ -221,6 +214,11 @@
         }
         
         [[AppDelegate theDelegate] checkAppVersion];
+
+        if (BuildSettings.newAppLayoutEnabled && !RiotSettings.shared.allChatsOnboardingHasBeenDisplayed)
+        {
+            [self showAllChatsOnboardingScreen];
+        }
     }
 }
 
@@ -357,11 +355,6 @@
         }
         [recentsDataSource setDelegate:recentsDataSourceDelegate andRecentsDataSourceMode:recentsDataSourceMode];
         
-        // Init the recents data source
-        groupsDataSource = [[GroupsDataSource alloc] initWithMatrixSession:mainSession];
-        [groupsDataSource finalizeInitialization];
-        [self.groupsViewController displayList:groupsDataSource];
-        
         // Check whether there are others sessions
         NSArray<MXSession*>* mxSessions = self.mxSessions;
         if (mxSessions.count > 1)
@@ -418,8 +411,6 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onMatrixSessionStateDidChange:) name:kMXSessionStateDidChangeNotification object:nil];
     }
     [mxSessionArray addObject:mxSession];
-    
-    // @TODO: handle multi sessions for groups
 }
 
 - (void)removeMatrixSession:(MXSession *)mxSession
@@ -448,13 +439,29 @@
     }
     
     [mxSessionArray removeObject:mxSession];
-    
-    // @TODO: handle multi sessions for groups
 }
 
 - (void)onMatrixSessionStateDidChange:(NSNotification *)notif
 {
     [self refreshTabBarBadges];
+}
+
+- (void)showAllChatsOnboardingScreen
+{
+    self.allChatsOnboardingCoordinatorBridgePresenter = [AllChatsOnboardingCoordinatorBridgePresenter new];
+    MXWeakify(self);
+    self.allChatsOnboardingCoordinatorBridgePresenter.completion = ^{
+        RiotSettings.shared.allChatsOnboardingHasBeenDisplayed = YES;
+        
+        MXStrongifyAndReturnIfNil(self);
+        
+        MXWeakify(self);
+        [self.allChatsOnboardingCoordinatorBridgePresenter dismissWithAnimated:YES completion:^{
+            MXStrongifyAndReturnIfNil(self);
+            self.allChatsOnboardingCoordinatorBridgePresenter = nil;
+        }];
+    };
+    [self.allChatsOnboardingCoordinatorBridgePresenter presentFrom:self animated:YES];
 }
 
 // TODO: Manage the onboarding coordinator at the AppCoordinator level
@@ -524,9 +531,9 @@
 {
     [self releaseSelectedItem];
     
-    _selectedRoomId = paramaters.roomId;
-    _selectedEventId = paramaters.eventId;
-    _selectedRoomSession = paramaters.mxSession;
+    selectedRoomId = paramaters.roomId;
+    selectedEventId = paramaters.eventId;
+    selectedRoomSession = paramaters.mxSession;
     
     [self.masterTabBarDelegate masterTabBarController:self didSelectRoomWithParameters:paramaters completion:completion];
     
@@ -539,9 +546,9 @@
     
     RoomPreviewData *roomPreviewData = parameters.previewData;
     
-    _selectedRoomPreviewData = roomPreviewData;
-    _selectedRoomId = roomPreviewData.roomId;
-    _selectedRoomSession = roomPreviewData.mxSession;
+    selectedRoomPreviewData = roomPreviewData;
+    selectedRoomId = roomPreviewData.roomId;
+    selectedRoomSession = roomPreviewData.mxSession;
     
     [self.masterTabBarDelegate masterTabBarController:self didSelectRoomPreviewWithParameters:parameters completion:completion];
     
@@ -559,43 +566,21 @@
 {
     [self releaseSelectedItem];
     
-    _selectedContact = contact;
+    selectedContact = contact;
     
     [self.masterTabBarDelegate masterTabBarController:self didSelectContact:contact withPresentationParameters:presentationParameters];
     
     [self refreshSelectedControllerSelectedCellIfNeeded];
 }
 
-- (void)selectGroup:(MXGroup*)group inMatrixSession:(MXSession*)matrixSession
-{
-    ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES stackAboveVisibleViews:NO];
-    
-    [self selectGroup:group inMatrixSession:matrixSession presentationParameters:presentationParameters];
-}
-
-- (void)selectGroup:(MXGroup*)group inMatrixSession:(MXSession*)matrixSession presentationParameters:(ScreenPresentationParameters*)presentationParameters
-{
-    [self releaseSelectedItem];
-    
-    _selectedGroup = group;
-    _selectedGroupSession = matrixSession;
-    
-    [self.masterTabBarDelegate masterTabBarController:self didSelectGroup:group inMatrixSession:matrixSession presentationParameters:presentationParameters];
-    
-    [self refreshSelectedControllerSelectedCellIfNeeded];
-}
-
 - (void)releaseSelectedItem
 {
-    _selectedRoomId = nil;
-    _selectedEventId = nil;
-    _selectedRoomSession = nil;
-    _selectedRoomPreviewData = nil;
+    selectedRoomId = nil;
+    selectedEventId = nil;
+    selectedRoomSession = nil;
+    selectedRoomPreviewData = nil;
     
-    _selectedContact = nil;
-    
-    _selectedGroup = nil;
-    _selectedGroupSession = nil;        
+    selectedContact = nil;
 }
 
 - (NSUInteger)missedDiscussionsCount

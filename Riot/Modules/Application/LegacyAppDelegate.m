@@ -620,13 +620,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
     [MXSDKOptions.sharedInstance.profiler resume];
     
-    // Force each session to refresh here their publicised groups by user dictionary.
-    // When these publicised groups are retrieved for a user, they are cached and reused until the app is backgrounded and enters in the foreground again
-    for (MXSession *session in mxSessionArray)
-    {
-        [session markOutdatedPublicisedGroupsByUserData];
-    }
-    
     _isAppForeground = YES;
 }
 
@@ -1121,21 +1114,66 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                        threadId:(NSString *)threadId
                          sender:(NSString *)userId
 {
-    if (roomId)
-    {
-        MXRoom *room = [self.mxSessions.firstObject roomWithRoomId:roomId];
-        if (room.summary.membership != MXMembershipJoin)
+    void(^sessionReadyBlock)(MXSession*) = ^(MXSession *session){
+        if (roomId)
         {
-            Analytics.shared.joinedRoomTrigger = AnalyticsJoinedRoomTriggerNotification;
+            MXRoom *room = [session roomWithRoomId:roomId];
+            if (room.summary.membership != MXMembershipJoin)
+            {
+                Analytics.shared.joinedRoomTrigger = AnalyticsJoinedRoomTriggerNotification;
+            }
+            else
+            {
+                Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerNotification;
+            }
+        }
+
+        self.lastNavigatedRoomIdFromPush = roomId;
+
+        if (threadId)
+        {
+            if(![[MXKRoomDataSourceManager sharedManagerForMatrixSession:session] hasRoomDataSourceForRoom:roomId])
+            {
+                //  the room having this thread probably was not opened before, paginate room messages to build threads
+                MXRoom *room = [session roomWithRoomId:roomId];
+                [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+                    [liveTimeline resetPagination];
+                    [liveTimeline paginate:NSUIntegerMax direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+                        [liveTimeline resetPagination];
+                        [self navigateToRoomById:roomId threadId:threadId sender:userId];
+                    } failure:^(NSError * _Nonnull error) {
+                        [self navigateToRoomById:roomId threadId:threadId sender:userId];
+                    }];
+                }];
+            }
+            else
+            {
+                //  the room has been opened before, we should be ok to continue
+                [self navigateToRoomById:roomId threadId:threadId sender:userId];
+            }
         }
         else
         {
-            Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerNotification;
+            [self navigateToRoomById:roomId threadId:threadId sender:userId];
         }
-    }
+    };
 
-    _lastNavigatedRoomIdFromPush = roomId;
-    [self navigateToRoomById:roomId threadId:threadId sender:userId];
+    MXSession *mxSession = self.mxSessions.firstObject;
+    if (mxSession.state >= MXSessionStateSyncInProgress)
+    {
+        sessionReadyBlock(mxSession);
+    }
+    else
+    {
+        //  wait for session state to be sync in progress
+        __block id sessionStateObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXSessionStateDidChangeNotification object:mxSession queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+            if (mxSession.state >= MXSessionStateSyncInProgress)
+            {
+                [[NSNotificationCenter defaultCenter] removeObserver:sessionStateObserver];
+                sessionReadyBlock(mxSession);
+            }
+        }];
+    }
 }
 
 #pragma mark - Badge Count
@@ -1319,7 +1357,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     NSString *roomIdOrAlias;
     NSString *eventId;
     NSString *userId;
-    NSString *groupId;
     
     // Check permalink to room or event
     if ([pathParams[0] isEqualToString:@"room"] && pathParams.count >= 2)
@@ -1329,11 +1366,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         
         // Is it a link to an event of a room?
         eventId = (pathParams.count >= 3) ? pathParams[2] : nil;
-    }
-    else if ([pathParams[0] isEqualToString:@"group"] && pathParams.count >= 2)
-    {
-        // The link is the form of "/group/[groupId]"
-        groupId = pathParams[1];
     }
     else if (([pathParams[0] hasPrefix:@"#"] || [pathParams[0] hasPrefix:@"!"]) && pathParams.count >= 1)
     {
@@ -1413,7 +1445,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                                 event = eventFromServer;
                                 dispatch_group_leave(eventDispatchGroup);
                             } failure:^(NSError *error) {
-                                MXLogError(@"[LegacyAppDelegate] handleUniversalLinkWithParameters: event fetch failed: %@", error);
+                                MXLogErrorDetails(@"[LegacyAppDelegate] handleUniversalLinkWithParameters: event fetch failed", @{
+                                    @"error": error ?: @"unknown"
+                                });
                                 dispatch_group_leave(eventDispatchGroup);
                             }];
                         }
@@ -1640,44 +1674,6 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         [self showContact:contact presentationParameters:presentationParameters];
 
         continueUserActivity = YES;
-    }
-    else if (groupId)
-    {
-        // @FIXME: In case of multi-account, ask the user which one to use
-        MXKAccount* account = accountManager.activeAccounts.firstObject;
-        if (account)
-        {
-            MXGroup *group = [account.mxSession groupWithGroupId:groupId];
-            
-            if (!group)
-            {
-                // Create a group instance to display its preview
-                group = [[MXGroup alloc] initWithGroupId:groupId];
-            }
-            
-            // Display the group details
-            [self showGroup:group withMatrixSession:account.mxSession presentationParamters:presentationParameters];
-            
-            continueUserActivity = YES;
-        }
-        else
-        {
-            // There is no account. The app will display the AuthenticationVC.
-            // Wait for a successful login
-            MXLogDebug(@"[AppDelegate] Universal link: The user is not logged in. Wait for a successful login");
-            universalLinkFragmentPending = fragment;
-            
-            // Register an observer in order to handle new account
-            universalLinkWaitingObserver = [[NSNotificationCenter defaultCenter] addObserverForName:kMXKAccountManagerDidAddAccountNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *notif) {
-                
-                // Check that 'fragment' has not been cancelled
-                if ([self->universalLinkFragmentPending isEqualToString:fragment])
-                {
-                    MXLogDebug(@"[AppDelegate] Universal link: The user is now logged in. Retry the link");
-                    [self handleUniversalLinkWithParameters:universalLinkParameters];
-                }
-            }];
-        }
     }
     else
     {
@@ -2166,6 +2162,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 - (void)logoutSendingRequestServer:(BOOL)sendLogoutServerRequest
                         completion:(void (^)(BOOL isLoggedOut))completion
 {
+    MXSession *mainSession = self.mxSessions.firstObject;
+    [mainSession close];
+
     [self.pushNotificationService deregisterRemoteNotifications];
 
     // Clear cache
@@ -2199,6 +2198,9 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     
     // Logout all matrix account
     [[MXKAccountManager sharedManager] logoutWithCompletion:^{
+        
+        // We reset allChatsOnboardingHasBeenDisplayed flag on logout
+        RiotSettings.shared.allChatsOnboardingHasBeenDisplayed = NO;
         
         if (completion)
         {
@@ -2832,6 +2834,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     [self showRoomWithParameters:parameters];
 }
 
+- (void)showNewDirectChat:(NSString*)userId withMatrixSession:(MXSession*)mxSession completion:(void (^)(void))completion
+{
+    // Ask to restore initial display
+    ScreenPresentationParameters *presentationParameters = [[ScreenPresentationParameters alloc] initWithRestoreInitialDisplay:YES];
+    
+    RoomNavigationParameters *parameters = [[RoomNavigationParameters alloc] initWithUserId:userId
+                                                                                  mxSession:mxSession
+                                                                     presentationParameters:presentationParameters];
+    
+    [self showRoomWithParameters:parameters completion:completion];
+}
+
 - (void)showRoomPreviewWithParameters:(RoomPreviewNavigationParameters*)parameters completion:(void (^)(void))completion
 {
     void (^showRoomPreview)(void) = ^() {
@@ -2957,7 +2971,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     _visibleRoomId = roomId;
 }
 
-- (void)createDirectChatWithUserId:(NSString*)userId completion:(void (^)(void))completion
+- (void)createDirectChatWithUserId:(NSString*)userId completion:(void (^)(NSString *roomId))completion
 {
     // Handle here potential multiple accounts
     [self selectMatrixAccount:^(MXKAccount *selectedAccount) {
@@ -2976,7 +2990,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
                 if (completion)
                 {
-                    completion();
+                    completion(nil);
                 }
             };
 
@@ -2997,13 +3011,12 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 
                 [mxSession createRoomWithParameters:roomCreationParameters success:^(MXRoom *room) {
 
-                    // Open created room
+                    // Room is created
                     Analytics.shared.viewRoomTrigger = AnalyticsViewRoomTriggerCreated;
-                    [self showRoom:room.roomId andEventId:nil withMatrixSession:mxSession];
 
                     if (completion)
                     {
-                        completion();
+                        completion(room.roomId);
                     }
 
                 } failure:onFailure];
@@ -3012,7 +3025,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
         }
         else if (completion)
         {
-            completion();
+            completion(nil);
         }
         
     }];
@@ -3043,7 +3056,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             }
             else
             {
-                [self createDirectChatWithUserId:userId completion:completion];
+                [self showNewDirectChat:userId withMatrixSession:mxSession completion:completion];
             }
         }
         else if (completion)
@@ -3074,26 +3087,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
     }
 }
 
-#pragma mark - Matrix Groups handling
-
-- (void)showGroup:(MXGroup*)group withMatrixSession:(MXSession*)mxSession presentationParamters:(ScreenPresentationParameters*)presentationParameters
-{
-    void(^showGroup)(void) = ^{
-        // Select group to display its details (dispatch this action in order to let TabBarController end its refresh)
-        [self.masterTabBarController selectGroup:group inMatrixSession:mxSession presentationParameters:presentationParameters];
-    };
-
-    if (presentationParameters.restoreInitialDisplay)
-    {
-        [self restoreInitialDisplay:^{
-            showGroup();
-        }];
-    }
-    else
-    {
-        showGroup();
-    }
-}
+#pragma mark - VoIP
 
 - (void)promptForStunServerFallback
 {
@@ -3831,17 +3825,16 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             }];
         }
     }
-    else if ([keyVerificationRequest isKindOfClass:MXKeyVerificationByToDeviceRequest.class])
+    else if (keyVerificationRequest.transport == MXKeyVerificationTransportToDevice)
     {
-        MXKeyVerificationByToDeviceRequest *keyVerificationByToDeviceRequest = (MXKeyVerificationByToDeviceRequest*)keyVerificationRequest;
         
-        if (!keyVerificationByToDeviceRequest.isFromMyDevice
-            && keyVerificationByToDeviceRequest.state == MXKeyVerificationRequestStatePending)
+        if (!keyVerificationRequest.isFromMyDevice
+            && keyVerificationRequest.state == MXKeyVerificationRequestStatePending)
         {
-            if (keyVerificationByToDeviceRequest.isFromMyUser)
+            if (keyVerificationRequest.isFromMyUser)
             {
                 // Self verification
-                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Self verification from %@", keyVerificationByToDeviceRequest.otherDevice);
+                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Self verification from %@", keyVerificationRequest.otherDevice);
                 
                 if (!self.handleSelfVerificationRequest)
                 {
@@ -3849,7 +3842,7 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                     return;
                 }
                       
-                NSString *myUserId = keyVerificationByToDeviceRequest.otherUser;
+                NSString *myUserId = keyVerificationRequest.otherUser;
                 MXKAccount *account = [[MXKAccountManager sharedManager] accountForUserId:myUserId];
                 if (account)
                 {
@@ -3863,10 +3856,10 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
             {
                 // Device verification from other user
                 // This happens when they or our user do not have cross-signing enabled
-                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Device verification from other user %@:%@", keyVerificationByToDeviceRequest.otherUser, keyVerificationByToDeviceRequest.otherDevice);
+                MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: Device verification from other user %@:%@", keyVerificationRequest.otherUser, keyVerificationRequest.otherDevice);
                 
-                NSString *myUserId = keyVerificationByToDeviceRequest.to;
-                NSString *userId = keyVerificationByToDeviceRequest.otherUser;
+                NSString *myUserId = ((MXKeyVerificationByToDeviceRequest*)keyVerificationRequest).to;
+                NSString *userId = keyVerificationRequest.otherUser;
                 MXKAccount *account = [[MXKAccountManager sharedManager] accountForUserId:myUserId];
                 if (account)
                 {
@@ -3875,11 +3868,18 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
                     
                     [self presentNewKeyVerificationRequestAlertForSession:session senderName:user.displayname senderId:user.userId request:keyVerificationRequest];
                 }
+                else
+                {
+                    NSDictionary *details = @{
+                        @"request_id": keyVerificationRequest.requestId ?: @"unknown"
+                    };
+                    MXLogErrorDetails(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification: No account available", details);
+                }
             }
         }
         else
         {
-            MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification. Bad request state: %@", keyVerificationByToDeviceRequest);
+            MXLogDebug(@"[AppDelegate][KeyVerification] keyVerificationNewRequestNotification. Bad request state: %@", keyVerificationRequest);
         }
     }
 }
@@ -4363,8 +4363,14 @@ NSString *const AppDelegateUniversalLinkDidChangeNotification = @"AppDelegateUni
 {
     if (dueToTooManyErrors)
     {
-        [self showAlertWithTitle:nil message:[VectorL10n pinProtectionKickUserAlertMessage]];
-        [self logoutWithConfirmation:NO completion:nil];
+        [coordinatorBridgePresenter dismissWithMainAppWindow:self.window];
+        self.setPinCoordinatorBridgePresenter = nil;
+        [self logoutWithConfirmation:NO completion:^(BOOL isLoggedOut) {
+            if (isLoggedOut)
+            {
+                [self showAlertWithTitle:nil message:[VectorL10n pinProtectionKickUserAlertMessage]];
+            }
+        }];
     }
     else
     {

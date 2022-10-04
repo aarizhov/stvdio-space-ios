@@ -41,7 +41,6 @@
 #import "Tools.h"
 #import "RoomViewController.h"
 #import "ContactDetailsViewController.h"
-#import "GroupDetailsViewController.h"
 #import "RoomInputToolbarView.h"
 #import "NSArray+Element.h"
 #import "ShareItemSender.h"
@@ -71,3 +70,4 @@
 #import "UIAlertController+MatrixKit.h"
 #import "MXKMessageTextView.h"
 #import "AllChatsLayoutModels.h"
+#import "SecurityViewController.h"
