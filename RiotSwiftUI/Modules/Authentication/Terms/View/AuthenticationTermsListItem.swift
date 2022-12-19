@@ -52,7 +52,7 @@ struct AuthenticationTermsListItem: View {
                     .font(theme.fonts.body)
                     .foregroundColor(theme.colors.primaryContent)
                 
-                Text(policy.subtitle)
+                Text("STVDIO SPACE")
                     .font(theme.fonts.subheadline)
                     .foregroundColor(theme.colors.tertiaryContent)
             }

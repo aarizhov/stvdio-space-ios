@@ -21,7 +21,7 @@ struct AuthenticationSSOButton: View {
     // MARK: - Constants
     
     enum Brand: String {
-        case apple, facebook, github, gitlab, google, twitter
+        case apple, facebook,/* github, gitlab,*/ google, twitter
     }
     
     // MARK: - Private
@@ -30,7 +30,7 @@ struct AuthenticationSSOButton: View {
     @ScaledMetric private var iconSize = 24
     
     private var renderingMode: Image.TemplateRenderingMode? {
-        provider.brand == Brand.apple.rawValue || provider.brand == Brand.github.rawValue ? .template : nil
+        provider.brand == Brand.apple.rawValue /*|| provider.brand == Brand.github.rawValue*/ ? .template : nil
     }
     
     // MARK: - Public
@@ -81,10 +81,10 @@ struct AuthenticationSSOButton: View {
             return Image(Asset.Images.authenticationSsoIconApple.name)
         case Brand.facebook.rawValue:
             return Image(Asset.Images.authenticationSsoIconFacebook.name)
-        case Brand.github.rawValue:
-            return Image(Asset.Images.authenticationSsoIconGithub.name)
-        case Brand.gitlab.rawValue:
-            return Image(Asset.Images.authenticationSsoIconGitlab.name)
+//        case Brand.github.rawValue:
+//            return Image(Asset.Images.authenticationSsoIconGithub.name)
+//        case Brand.gitlab.rawValue:
+//            return Image(Asset.Images.authenticationSsoIconGitlab.name)
         case Brand.google.rawValue:
             return Image(Asset.Images.authenticationSsoIconGoogle.name)
         case Brand.twitter.rawValue:

@@ -50,7 +50,7 @@ struct AuthenticationTermsViewState: BindableState {
     var bindings: AuthenticationTermsBindings
     
     var headerMessage: String {
-        VectorL10n.authenticationTermsMessage(homeserver.address)
+        VectorL10n.authenticationTermsMessage("STVDIO SPACE")
     }
     
     /// Whether or not all of the policies have been accepted.

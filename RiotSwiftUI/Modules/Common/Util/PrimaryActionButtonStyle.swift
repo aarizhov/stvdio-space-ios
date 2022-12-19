@@ -81,3 +81,36 @@ struct PrimaryActionButtonStyle_Previews: PreviewProvider {
             .theme(.dark).preferredColorScheme(.dark)
     }
 }
+
+
+struct PrimaryActionButtonStyleForOnboardingScreen: ButtonStyle {
+    @Environment(\.theme) private var theme
+    @Environment(\.isEnabled) private var isEnabled
+    
+    var customColor: Color? = Color("FirstScreenColor")
+    
+    private var fontColor: Color {
+        // Always white unless disabled with a dark theme.
+        .white.opacity(theme.isDark && !isEnabled ? 0.3 : 1.0)
+    }
+    
+    private var backgroundColor: Color {
+        customColor ?? theme.colors.accent
+    }
+    
+    func makeBody(configuration: Self.Configuration) -> some View {
+        configuration.label
+            .padding(12.0)
+            .frame(maxWidth: .infinity)
+            .foregroundColor(fontColor)
+            .font(theme.fonts.body)
+            .background(backgroundColor.opacity(backgroundOpacity(when: configuration.isPressed)))
+            .cornerRadius(8.0)
+    }
+    
+    func backgroundOpacity(when isPressed: Bool) -> CGFloat {
+        guard isEnabled else { return 0.3 }
+        return isPressed ? 0.6 : 1.0
+    }
+}
+

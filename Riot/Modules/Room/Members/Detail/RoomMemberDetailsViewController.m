@@ -350,9 +350,11 @@
     {        
         self.roomMemberNameContainerView.hidden = !self.mxRoomMember.displayname;
         
-        self.roomMemberNameLabel.text = self.mxRoomMember.displayname; 
+        self.roomMemberNameLabel.text = self.mxRoomMember.displayname;
         
-        self.roomMemberUserIdLabel.text = self.mxRoomMember.userId;    
+        NSArray *listItems = [self.mxRoomMember.userId componentsSeparatedByString:@":"];
+        
+        self.roomMemberUserIdLabel.text = listItems.firstObject;
         
         // Update member power level
         MXWeakify(self);

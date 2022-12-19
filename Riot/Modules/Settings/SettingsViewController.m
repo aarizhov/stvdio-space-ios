@@ -1438,8 +1438,9 @@ ChangePasswordCoordinatorBridgePresenterDelegate>
     NSString *buildVersion = appInfo.appVersion.bundleVersion;
     
     NSString *appVersionInfo = [NSString stringWithFormat:@"%@ %@ (%@)", appName, appVersion, buildVersion];
- 
-    NSString *loggedUserInfo = [VectorL10n settingsConfigUserId:account.mxCredentials.userId];
+    NSArray *listItems = [account.mxCredentials.userId componentsSeparatedByString:@":"].firstObject;
+    
+    NSString *loggedUserInfo = [VectorL10n settingsConfigUserId:listItems];
     
     NSString *homeserverInfo = [VectorL10n settingsConfigHomeServer:account.mxCredentials.homeServer];       
     
