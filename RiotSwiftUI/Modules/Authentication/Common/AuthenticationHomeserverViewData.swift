@@ -33,15 +33,13 @@ struct AuthenticationHomeserverViewData: Equatable {
 extension AuthenticationHomeserverViewData {
     /// A mock homeserver that is configured just like matrix.org.
     static var mockMatrixDotOrg: AuthenticationHomeserverViewData {
-        AuthenticationHomeserverViewData(address: "matrix.org",
+        AuthenticationHomeserverViewData(address: "space.stvd.io",
                                          showLoginForm: true,
                                          showRegistrationForm: true,
                                          ssoIdentityProviders: [
                                             SSOIdentityProvider(id: "1", name: "Apple", brand: "apple", iconURL: nil),
                                             SSOIdentityProvider(id: "2", name: "Facebook", brand: "facebook", iconURL: nil),
-                                            SSOIdentityProvider(id: "3", name: "GitHub", brand: "github", iconURL: nil),
-                                            SSOIdentityProvider(id: "4", name: "GitLab", brand: "gitlab", iconURL: nil),
-                                            SSOIdentityProvider(id: "5", name: "Google", brand: "google", iconURL: nil)
+                                            SSOIdentityProvider(id: "3", name: "Google", brand: "google", iconURL: nil)
                                          ])
     }
     

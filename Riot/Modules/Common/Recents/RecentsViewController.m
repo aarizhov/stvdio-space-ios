@@ -1940,7 +1940,7 @@ NSString *const RecentsViewControllerDataReadyNotification = @"RecentsViewContro
     {
         self.exploreRoomsCoordinatorBridgePresenter = [[ExploreRoomCoordinatorBridgePresenter alloc] initWithSession:self.mainSession spaceId:self.dataSource.currentSpace.spaceId];
         self.exploreRoomsCoordinatorBridgePresenter.delegate = self;
-        [self.exploreRoomsCoordinatorBridgePresenter presentFrom:self animated:YES];
+        [self.exploreRoomsCoordinatorBridgePresenter presentFrom:self animated:YES presentationStyle: UIModalPresentationFullScreen];
     }
     else if (RiotSettings.shared.roomsAllowToJoinPublicRooms)
     {

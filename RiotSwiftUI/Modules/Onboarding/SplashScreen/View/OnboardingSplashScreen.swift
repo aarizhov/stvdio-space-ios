@@ -100,11 +100,12 @@ struct OnboardingSplashScreen: View {
             Button { viewModel.send(viewAction: .register) } label: {
                 Text(VectorL10n.onboardingSplashRegisterButtonTitle)
             }
-            .buttonStyle(PrimaryActionButtonStyle())
+            .buttonStyle(PrimaryActionButtonStyleForOnboardingScreen())
             
             Button { viewModel.send(viewAction: .login) } label: {
                 Text(VectorL10n.onboardingSplashLoginButtonTitle)
                     .font(theme.fonts.body)
+                    .foregroundColor(Color("FirstScreenColor"))
                     .padding(12)
             }
         }

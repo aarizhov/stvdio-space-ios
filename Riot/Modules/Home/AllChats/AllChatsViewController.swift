@@ -160,7 +160,12 @@ class AllChatsViewController: HomeViewController {
         AppDelegate.theDelegate().checkAppVersion()
 
         if BuildSettings.newAppLayoutEnabled && !RiotSettings.shared.allChatsOnboardingHasBeenDisplayed {
-            self.showAllChatsOnboardingScreen()
+    
+        }
+    
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [ weak self] in
+            self?.dataSource.currentSpace = MXSpace(roomId: "!yFDzStmSNWToDsAiTr:matrix.org", session: (self?.mainSession)!)
+            self?.joinARoom()
         }
     }
     
@@ -275,12 +280,12 @@ class AllChatsViewController: HomeViewController {
     
     // MARK: - Actions
     
-    @objc private func showSpaceSelectorAction(sender: AnyObject) {
+    @objc private func showSpaceSelectorAction(sender: AnyObject?) {
         Analytics.shared.viewRoomTrigger = .roomList
         let currentSpaceId = self.dataSource.currentSpace?.spaceId ?? SpaceSelectorConstants.homeSpaceId
         let spaceSelectorBridgePresenter = SpaceSelectorBottomSheetCoordinatorBridgePresenter(session: self.mainSession, selectedSpaceId: currentSpaceId, showHomeSpace: true)
-        spaceSelectorBridgePresenter.present(from: self, animated: true)
         spaceSelectorBridgePresenter.delegate = self
+        spaceSelectorBridgePresenter.present(from: self, animated: true)
         self.spaceSelectorBridgePresenter = spaceSelectorBridgePresenter
     }
     

@@ -37,9 +37,9 @@ struct AuthenticationRegistrationScreen: View {
                     .padding(.top, OnboardingMetrics.topPaddingToNavigationBar)
                     .padding(.bottom, 28)
                 
-                serverInfo
-                    .padding(.leading, 12)
-                    .padding(.bottom, 16)
+//                serverInfo
+//                    .padding(.leading, 12)
+//                    .padding(.bottom, 16)
                 
                 Rectangle()
                     .fill(theme.colors.quinaryContent)
@@ -55,6 +55,10 @@ struct AuthenticationRegistrationScreen: View {
                         .foregroundColor(theme.colors.secondaryContent)
                         .padding(.top, 16)
                 }
+                
+                termsAndConditionLabel
+                    .padding(.top, 16)
+                    .padding(.leading, 5)
                 
                 if viewModel.viewState.showSSOButtons {
                     ssoButtons
@@ -89,12 +93,20 @@ struct AuthenticationRegistrationScreen: View {
     }
     
     /// The sever information section that includes a button to select a different server.
-    var serverInfo: some View {
-        AuthenticationServerInfoSection(address: viewModel.viewState.homeserver.address,
-                                        flow: .register) {
-            viewModel.send(viewAction: .selectServer)
+//    var serverInfo: some View {
+//        AuthenticationServerInfoSection(address: viewModel.viewState.homeserver.address,
+//                                        flow: .register) {
+//            viewModel.send(viewAction: .selectServer)
+//        }
+//    }
+    
+    var termsAndConditionLabel: some View {
+        VStack {
+            let link = "By using STVDIO Space you agree to the [STVDIO Space Terms and Conditions](https://stvd.io/terms-and-conditions/)"
+            Text(.init(link))
         }
     }
+
     
     /// The form with text fields for username and password, along with a submit button.
     var registrationForm: some View {
@@ -137,7 +149,7 @@ struct AuthenticationRegistrationScreen: View {
     /// A list of SSO buttons that can be used for login.
     var ssoButtons: some View {
         VStack(spacing: 16) {
-            ForEach(viewModel.viewState.homeserver.ssoIdentityProviders) { provider in
+            ForEach(AuthenticationHomeserverViewData.mockMatrixDotOrg.ssoIdentityProviders) { provider in
                 AuthenticationSSOButton(provider: provider) {
                     viewModel.send(viewAction: .continueWithSSO(provider))
                 }

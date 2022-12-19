@@ -39,9 +39,9 @@ struct AuthenticationLoginScreen: View {
                     .padding(.top, OnboardingMetrics.topPaddingToNavigationBar)
                     .padding(.bottom, 28)
                 
-                serverInfo
-                    .padding(.leading, 12)
-                    .padding(.bottom, 16)
+//                serverInfo
+//                    .padding(.leading, 12)
+//                    .padding(.bottom, 16)
                 
                 Rectangle()
                     .fill(theme.colors.quinaryContent)
@@ -57,6 +57,9 @@ struct AuthenticationLoginScreen: View {
                         .foregroundColor(theme.colors.secondaryContent)
                         .padding(.top, 16)
                 }
+                termsAndConditionLabel
+                    .padding(.top, 16)
+                    .padding(.leading, 5)
                 
                 if viewModel.viewState.showSSOButtons {
                     ssoButtons
@@ -85,98 +88,105 @@ struct AuthenticationLoginScreen: View {
             .foregroundColor(theme.colors.primaryContent)
     }
     
-    /// The sever information section that includes a button to select a different server.
-    var serverInfo: some View {
-        AuthenticationServerInfoSection(address: viewModel.viewState.homeserver.address,
-                                        flow: .login) {
-            viewModel.send(viewAction: .selectServer)
+    var termsAndConditionLabel: some View {
+        VStack {
+            let link = "By using STVDIO Space you agree to the [STVDIO Space Terms and Conditions](https://stvd.io/terms-and-conditions/)"
+            Text(.init(link))
         }
     }
-    
-    /// The form with text fields for username and password, along with a submit button.
-    var loginForm: some View {
-        VStack(spacing: 14) {
-            RoundedBorderTextField(placeHolder: VectorL10n.authenticationLoginUsername,
-                                   text: $viewModel.username,
-                                   isFirstResponder: false,
-                                   configuration: UIKitTextInputConfiguration(returnKeyType: .next,
-                                                                              autocapitalizationType: .none,
-                                                                              autocorrectionType: .no),
-                                   onEditingChanged: usernameEditingChanged,
-                                   onCommit: { isPasswordFocused = true })
-            .accessibilityIdentifier("usernameTextField")
-            .padding(.bottom, 7)
-            
-            RoundedBorderTextField(placeHolder: VectorL10n.authPasswordPlaceholder,
-                                   text: $viewModel.password,
-                                   isFirstResponder: isPasswordFocused,
-                                   configuration: UIKitTextInputConfiguration(returnKeyType: .done,
-                                                                              isSecureTextEntry: true),
-                                   onEditingChanged: passwordEditingChanged,
-                                   onCommit: submit)
-            .accessibilityIdentifier("passwordTextField")
-            
-            Button { viewModel.send(viewAction: .forgotPassword) } label: {
-                Text(VectorL10n.authenticationLoginForgotPassword)
-                    .font(theme.fonts.body)
+        /// The sever information section that includes a button to select a different server.
+        //    var serverInfo: some View {
+        //        AuthenticationServerInfoSection(address: viewModel.viewState.homeserver.address,
+        //                                        flow: .login) {
+        //            viewModel.send(viewAction: .selectServer)
+        //        }
+        //    }
+        
+        /// The form with text fields for username and password, along with a submit button.
+        var loginForm: some View {
+            VStack(spacing: 14) {
+                RoundedBorderTextField(placeHolder: VectorL10n.authenticationLoginUsername,
+                                       text: $viewModel.username,
+                                       isFirstResponder: false,
+                                       configuration: UIKitTextInputConfiguration(returnKeyType: .next,
+                                                                                  autocapitalizationType: .none,
+                                                                                  autocorrectionType: .no),
+                                       onEditingChanged: usernameEditingChanged,
+                                       onCommit: { isPasswordFocused = true })
+                .accessibilityIdentifier("usernameTextField")
+                .padding(.bottom, 7)
+                
+                RoundedBorderTextField(placeHolder: VectorL10n.authPasswordPlaceholder,
+                                       text: $viewModel.password,
+                                       isFirstResponder: isPasswordFocused,
+                                       configuration: UIKitTextInputConfiguration(returnKeyType: .done,
+                                                                                  isSecureTextEntry: true),
+                                       onEditingChanged: passwordEditingChanged,
+                                       onCommit: submit)
+                .accessibilityIdentifier("passwordTextField")
+                
+                Button { viewModel.send(viewAction: .forgotPassword) } label: {
+                    Text(VectorL10n.authenticationLoginForgotPassword)
+                        .font(theme.fonts.body)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.bottom, 8)
+                
+                Button(action: submit) {
+                    Text(VectorL10n.next)
+                }
+                .buttonStyle(PrimaryActionButtonStyle())
+                .disabled(!viewModel.viewState.canSubmit)
+                .accessibilityIdentifier("nextButton")
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.bottom, 8)
-            
-            Button(action: submit) {
-                Text(VectorL10n.next)
+        }
+        
+        /// A list of SSO buttons that can be used for login.
+        var ssoButtons: some View {
+            VStack(spacing: 16) {
+                ForEach(AuthenticationHomeserverViewData.mockMatrixDotOrg.ssoIdentityProviders) { provider in
+                    AuthenticationSSOButton(provider: provider) {
+                        viewModel.send(viewAction: .continueWithSSO(provider))
+                    }
+                    .accessibilityIdentifier("ssoButton")
+                }
+            }
+        }
+        
+        /// A fallback button that can be used for login.
+        var fallbackButton: some View {
+            Button(action: fallback) {
+                Text(VectorL10n.login)
             }
             .buttonStyle(PrimaryActionButtonStyle())
-            .disabled(!viewModel.viewState.canSubmit)
-            .accessibilityIdentifier("nextButton")
+            .accessibilityIdentifier("fallbackButton")
         }
-    }
-    
-    /// A list of SSO buttons that can be used for login.
-    var ssoButtons: some View {
-        VStack(spacing: 16) {
-            ForEach(viewModel.viewState.homeserver.ssoIdentityProviders) { provider in
-                AuthenticationSSOButton(provider: provider) {
-                    viewModel.send(viewAction: .continueWithSSO(provider))
-                }
-                .accessibilityIdentifier("ssoButton")
-            }
-        }
-    }
-
-    /// A fallback button that can be used for login.
-    var fallbackButton: some View {
-        Button(action: fallback) {
-            Text(VectorL10n.login)
-        }
-        .buttonStyle(PrimaryActionButtonStyle())
-        .accessibilityIdentifier("fallbackButton")
-    }
-    
-    /// Parses the username for a homeserver.
-    func usernameEditingChanged(isEditing: Bool) {
-        guard !isEditing, !viewModel.username.isEmpty else { return }
         
-        viewModel.send(viewAction: .parseUsername)
+        /// Parses the username for a homeserver.
+        func usernameEditingChanged(isEditing: Bool) {
+            guard !isEditing, !viewModel.username.isEmpty else { return }
+            
+            viewModel.send(viewAction: .parseUsername)
+        }
+        
+        /// Resets the password field focus.
+        func passwordEditingChanged(isEditing: Bool) {
+            guard !isEditing else { return }
+            isPasswordFocused = false
+        }
+        
+        /// Sends the `next` view action so long as the form is ready to submit.
+        func submit() {
+            guard viewModel.viewState.canSubmit else { return }
+            viewModel.send(viewAction: .next)
+        }
+        
+        /// Sends the `fallback` view action.
+        func fallback() {
+            viewModel.send(viewAction: .fallback)
+        }
+        
     }
-    
-    /// Resets the password field focus.
-    func passwordEditingChanged(isEditing: Bool) {
-        guard !isEditing else { return }
-        isPasswordFocused = false
-    }
-    
-    /// Sends the `next` view action so long as the form is ready to submit.
-    func submit() {
-        guard viewModel.viewState.canSubmit else { return }
-        viewModel.send(viewAction: .next)
-    }
-
-    /// Sends the `fallback` view action.
-    func fallback() {
-        viewModel.send(viewAction: .fallback)
-    }
-}
 
 // MARK: - Previews
 
